@@ -86,46 +86,54 @@ int do_ret_sys_execve(struct pt_regs *ctx)
 }
 """
 
+
 class EventType(object):
     EVENT_ARG = 0
     EVENT_RET = 1
+
 
 processes = {}
 processDetails = {}
 argv = defaultdict(list)
 
+
 def parse_event(cpu, data, size):
     event = b["events"].event(data)
-    if (event.type == EventType.EVENT_ARG):
-        argv[event.pid].append(event.argv.decode('utf-8'))
-    elif (event.type == EventType.EVENT_RET):
+    if event.type == EventType.EVENT_ARG:
+        argv[event.pid].append(event.argv.decode("utf-8"))
+    elif event.type == EventType.EVENT_RET:
         ppid = event.ppid
         pid = event.pid
-        binary = str(event.comm.decode('utf-8'))
-        path = ''
+        binary = str(event.comm.decode("utf-8"))
+        path = ""
         arguments = " ".join(argv[pid][1:])
-        if (argv[pid]):
+        if argv[pid]:
             path = argv[pid][0]
-        if (pid not in processDetails):
-            processDetails[pid] = {"Parent PID": ppid, "PID": pid, "path": path,"binary": binary, "arguments": arguments, "children": []}
-        if (ppid not in processes):
+        if pid not in processDetails:
+            processDetails[pid] = {
+                "Parent PID": ppid,
+                "PID": pid,
+                "path": path,
+                "binary": binary,
+                "arguments": arguments,
+                "children": [],
+            }
+        if ppid not in processes:
             processes[ppid] = [pid]
         else:
             processes[ppid].append(pid)
-        if (ppid in processDetails):
+        if ppid in processDetails:
             processDetails[ppid]["children"].append(pid)
-        if (pid not in processes):
+        if pid not in processes:
             processes[pid] = []
-    
 
-        # TODO: add children to pid if in dictionary       
+        # TODO: add children to pid if in dictionary
         # print(f"Parent PID: {event.ppid}")
         # print(f"PID: {event.pid}")
         # print(binary)
         # print(f"ARGV: {argv[pid]}")
 
         # print()
-
 
 
 b = BPF(text=program, cflags=["-Wno-macro-redefined"])

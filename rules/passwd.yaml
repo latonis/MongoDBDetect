@@ -1,0 +1,6 @@
+name: Suspicious /etc/shadow Usage
+uuid: 5e3566a3-9f19-4ac7-8710-ec5fb09260ed
+detection_logic:
+  command_line: 
+    - /etc/shadow
+  

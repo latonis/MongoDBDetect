@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class DetectionRule:
     name: str
@@ -8,4 +9,3 @@ class DetectionRule:
 
     def top_level_fields(self) -> list[str]:
         return list(self.detection_logic.keys())
-
