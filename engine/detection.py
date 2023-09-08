@@ -11,23 +11,24 @@ class DetectionEngine:
         self.connect_to_client()
         self.get_change_stream()
 
-    def add_rule(self, rule: rule.DetectionRule):
+    def add_rule(self, rule: rule.DetectionRule) -> None:
         if not rule:
             return
 
         self.rules.append(rule)
 
-    def add_rules(self, directory: str = ""):
+    def add_rules(self, directory: str = "") -> None:
         if not directory:
             return
 
         for root, _, files in os.walk(directory):
             for entry in files:
-                with open(os.path.join(root, entry), "rb") as yaml_file:
-                    rule_def = yaml.safe_load(yaml_file)
-                    self.add_rule(rule.DetectionRule(**rule_def))
+                if entry.endswith(".yml") or entry.endswith(".yaml"):
+                    with open(os.path.join(root, entry), "rb") as yaml_file:
+                        rule_def = yaml.safe_load(yaml_file)
+                        self.add_rule(rule.DetectionRule(**rule_def))
 
-    def connect_to_client(self, URI: str = ""):
+    def connect_to_client(self, URI: str = "") -> None:
         if not URI:
             env_uri = os.getenv("CHANGE_STREAM_DB", "")
             if not (env_uri):
@@ -35,7 +36,7 @@ class DetectionEngine:
             URI = env_uri
         self.mc = pymongo.MongoClient(URI)
 
-    def get_change_stream(self):
+    def get_change_stream(self) -> None:
         pipeline = [{"$match": {"operationType": {"$in": ["insert"]}}}]
 
         self.cursor = (
@@ -44,10 +45,10 @@ class DetectionEngine:
             .watch(pipeline=pipeline)
         )
 
-    def get_rules(self):
+    def get_rules(self) -> list:
         return self.rules
 
-    def process_log(self, log: dict):
+    def process_log(self, log: dict) -> list:
         if not log:
             return
         hits = []
@@ -58,15 +59,16 @@ class DetectionEngine:
                     for detection in rule_entry.detection_logic.get(field):
                         if detection in log.get(field):
                             hits.append(("alert!!", log, rule_entry.detection_logic))
-        print(hits)
+        return hits
 
 
-engine = DetectionEngine()
+if __name__ == "__main__":
+    engine = DetectionEngine()
 
-# add all the rules
-engine.add_rules("./rules/")
+    # add all the rules
+    engine.add_rules("./rules/")
 
-# watch the change stream
-for document in engine.cursor:
-    log = document.get("fullDocument")
-    engine.process_log(log)
+    # watch the change stream
+    for document in engine.cursor:
+        log = document.get("fullDocument")
+        engine.process_log(log)
