@@ -1,7 +1,7 @@
 import pymongo
 import os
 import yaml
-
+import json
 import rule
 
 
@@ -28,19 +28,22 @@ class DetectionEngine:
                         rule_def = yaml.safe_load(yaml_file)
                         self.add_rule(rule.DetectionRule(**rule_def))
 
+    def alert(self, msg):
+        print("\033[91m {}\033[00m" .format("alert!!"), msg)
+
     def connect_to_client(self, URI: str = "") -> None:
         if not URI:
             env_uri = os.getenv("CHANGE_STREAM_DB", "")
             if not (env_uri):
                 return None
             URI = env_uri
-        self.mc = pymongo.MongoClient(URI)
+        self.mongo_client = pymongo.MongoClient(URI)
 
     def get_change_stream(self) -> None:
         pipeline = [{"$match": {"operationType": {"$in": ["insert"]}}}]
 
         self.cursor = (
-            self.mc.get_database(os.getenv("CHANGE_DB_NAME", ""))
+            self.mongo_client.get_database(os.getenv("CHANGE_DB_NAME", ""))
             .get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
             .watch(pipeline=pipeline)
         )
@@ -58,8 +61,7 @@ class DetectionEngine:
                 if field in log:
                     for detection in rule_entry.detection_logic.get(field):
                         if detection in log.get(field):
-                            hits.append(("alert!!", log, rule_entry.detection_logic))
-        return hits
+                           self.alert(f"{rule_entry.uuid} - {rule_entry.name}\n{json.dumps(log, indent=2, default=str)}")
 
 
 if __name__ == "__main__":
