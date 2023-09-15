@@ -7,10 +7,11 @@ import rule
 
 class DetectionEngine:
     def __init__(self):
+        self.resume_token = None
         self.rules: list(rule.DetectionRule) = []
         self.connect_to_client()
+        self.get_resume_token()
         self.get_change_stream()
-        self.resume_token = ""
 
     def add_rule(self, rule: rule.DetectionRule) -> None:
         if not rule:
@@ -43,11 +44,26 @@ class DetectionEngine:
     def get_change_stream(self) -> None:
         pipeline = [{"$match": {"operationType": {"$in": ["insert"]}}}]
 
-        self.cursor = (
-            self.mongo_client.get_database(os.getenv("CHANGE_DB_NAME", ""))
-            .get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
-            .watch(pipeline=pipeline)
-        )
+        if self.resume_token:
+            self.cursor = (
+                self.mongo_client.get_database(os.getenv("CHANGE_DB_NAME", ""))
+                .get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
+                .watch(pipeline=pipeline, resume_after=self.resume_token)
+            )
+        else:
+            self.cursor = (
+                self.mongo_client.get_database(os.getenv("CHANGE_DB_NAME", ""))
+                .get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
+                .watch(pipeline=pipeline)
+            )
+
+    def get_resume_token(self) -> None:
+        self.config_collection = self.mongo_client.get_database(
+            os.getenv("CHANGE_DB_NAME", "")
+        ).get_collection(os.getenv("CONFIG_COLLECTION_NAME", ""))
+        token = self.config_collection.find_one({"resume_token": {"$exists": True}})
+        if token:
+            self.resume_token = token.get("resume_token")
 
     def get_rules(self) -> list:
         return self.rules
@@ -66,6 +82,13 @@ class DetectionEngine:
                                 f"{rule_entry.uuid} - {rule_entry.name}\n{json.dumps(log, indent=2, default=str)}"
                             )
 
+    def save_token(self) -> None:
+        self.config_collection.update_one(
+            {"resume_token": {"$exists": True}},
+            {"$set": {"resume_token": self.resume_token}},
+            upsert=True,
+        )
+
 
 if __name__ == "__main__":
     try:
@@ -81,5 +104,8 @@ if __name__ == "__main__":
             engine.resume_token = engine.cursor.resume_token
     except KeyboardInterrupt:
         print("Exiting the detection engine...")
+        engine.save_token()
     except Exception as e:
         print(f"Something went wrong: {e}")
+    # finally:
+    #     engine.save_token()

@@ -7,6 +7,7 @@ The examples contain an agent to collect and forward logs, an engine to process 
 These environment variables are needed for the detection engine to know where to look for the logs to monitor.
 ```bash
 export CHANGE_COLLECTION_NAME=process
+export CONFIG_COLLECTION_NAME=configuration
 export CHANGE_DB_NAME=monitoring                      
 export CHANGE_STREAM_DB="mongodb://localhost:27017"
 ```
