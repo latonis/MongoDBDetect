@@ -104,8 +104,7 @@ if __name__ == "__main__":
             engine.resume_token = engine.cursor.resume_token
     except KeyboardInterrupt:
         print("Exiting the detection engine...")
-        engine.save_token()
     except Exception as e:
         print(f"Something went wrong: {e}")
-    # finally:
-    #     engine.save_token()
+    finally:
+        engine.save_token()
