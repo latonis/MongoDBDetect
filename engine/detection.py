@@ -10,6 +10,7 @@ class DetectionEngine:
         self.rules: list(rule.DetectionRule) = []
         self.connect_to_client()
         self.get_change_stream()
+        self.resume_token = ""
 
     def add_rule(self, rule: rule.DetectionRule) -> None:
         if not rule:
@@ -29,7 +30,7 @@ class DetectionEngine:
                         self.add_rule(rule.DetectionRule(**rule_def))
 
     def alert(self, msg):
-        print("\033[91m {}\033[00m" .format("alert!!"), msg)
+        print("\033[91m {}\033[00m".format("alert!!"), msg)
 
     def connect_to_client(self, URI: str = "") -> None:
         if not URI:
@@ -61,7 +62,9 @@ class DetectionEngine:
                 if field in log:
                     for detection in rule_entry.detection_logic.get(field):
                         if detection in log.get(field):
-                           self.alert(f"{rule_entry.uuid} - {rule_entry.name}\n{json.dumps(log, indent=2, default=str)}")
+                            self.alert(
+                                f"{rule_entry.uuid} - {rule_entry.name}\n{json.dumps(log, indent=2, default=str)}"
+                            )
 
 
 if __name__ == "__main__":
@@ -74,3 +77,4 @@ if __name__ == "__main__":
     for document in engine.cursor:
         log = document.get("fullDocument")
         engine.process_log(log)
+        engine.resume_token = engine.cursor.resume_token

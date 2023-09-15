@@ -94,13 +94,15 @@ class Agent:
         return 0;
     }
     """
-    argv = defaultdict(list)
 
     def __init__(self):
         self.hostname = socket.gethostname()
         self.ip_addr = socket.gethostbyname(self.hostname)
         self.mongo_client = pymongo.MongoClient(os.getenv("CHANGE_STREAM_DB", ""))
-        self.collection = self.mongo_client.get_database(os.getenv("CHANGE_DB_NAME", "")).get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
+        self.collection = self.mongo_client.get_database(
+            os.getenv("CHANGE_DB_NAME", "")
+        ).get_collection(os.getenv("CHANGE_COLLECTION_NAME", ""))
+        self.argv = defaultdict(list)
 
     def push_mongo(self, event):
         self.collection.insert_one(event)
