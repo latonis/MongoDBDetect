@@ -147,5 +147,10 @@ class Agent:
 
 
 if __name__ == "__main__":
-    agent = Agent()
-    agent.init_agent()
+    try:
+        agent = Agent()
+        agent.init_agent()
+    except KeyboardInterrupt:
+        print("Exiting the monitoring agent...")
+    except Exception as e:
+        print(f"Something went wrong: {e}")

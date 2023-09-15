@@ -68,13 +68,18 @@ class DetectionEngine:
 
 
 if __name__ == "__main__":
-    engine = DetectionEngine()
+    try:
+        engine = DetectionEngine()
 
-    # add all the rules
-    engine.add_rules("./rules/")
+        # add all the rules
+        engine.add_rules("./rules/")
 
-    # watch the change stream
-    for document in engine.cursor:
-        log = document.get("fullDocument")
-        engine.process_log(log)
-        engine.resume_token = engine.cursor.resume_token
+        # watch the change stream
+        for document in engine.cursor:
+            log = document.get("fullDocument")
+            engine.process_log(log)
+            engine.resume_token = engine.cursor.resume_token
+    except KeyboardInterrupt:
+        print("Exiting the detection engine...")
+    except Exception as e:
+        print(f"Something went wrong: {e}")
