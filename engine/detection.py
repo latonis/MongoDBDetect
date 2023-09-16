@@ -81,6 +81,8 @@ class DetectionEngine:
                             self.alert(
                                 f"{rule_entry.uuid} - {rule_entry.name}\n{json.dumps(log, indent=2, default=str)}"
                             )
+                            hits.append(rule_entry.uuid)
+        return hits
 
     def save_token(self) -> None:
         self.config_collection.update_one(
