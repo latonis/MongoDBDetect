@@ -109,4 +109,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Something went wrong: {e}")
     finally:
-        engine.save_token()
+        if engine:
+            engine.save_token()
