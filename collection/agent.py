@@ -2,7 +2,7 @@
 from collections import defaultdict
 from bcc import BPF
 
-import json
+import datetime
 import os
 import pymongo
 import socket
@@ -128,6 +128,7 @@ class Agent:
                 "binary": binary,
                 "arguments": arguments,
                 "command_line": f"{path} {arguments}",
+                "ts": datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000,
             }
             self.push_mongo(entry)
 

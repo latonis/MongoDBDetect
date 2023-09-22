@@ -3,6 +3,7 @@ def rule(event: dict) -> bool:
         return True
     return False
 
+
 """
 detection_logic:
   command_line: 
