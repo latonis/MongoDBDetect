@@ -1,4 +1,4 @@
-name: Pipe to /tmp/ Directory
+name: Output redirection to /tmp/ Directory
 uuid: f825ad39-d4b1-41da-91ec-6438d8dc9ace
 detection_logic:
   command_line: 
