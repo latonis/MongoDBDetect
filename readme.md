@@ -25,7 +25,13 @@ python engine/detection.py
 ## Running the Agent
 The agent requires sudo privileges due to the eBPF portion of the code.
 ```bash
-python3 engine/detection.py
+sudo -E python collection/agent.py
+```
+
+## Running the Tests
+There is a small config portion for pytest in [pyproject.toml](./pyproject.toml).
+```bash
+pytest
 ```
 ## Directory
 ```bash
